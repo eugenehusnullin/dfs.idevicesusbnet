@@ -18,10 +18,9 @@ namespace ConsoleExample
     {
         private DeviceListener deviceListener;
         private List<Device> connectedDevices = new List<Device>();
-        private DeviceConnection deviceConnection;
         
         static void Main(string[] args)
-        {
+        {            
             Program program = new Program();
             program.start();
             
@@ -44,7 +43,7 @@ namespace ConsoleExample
                 }
                 else if (s.Equals("2"))
                 {
-                    program.closeConnection();
+                    program.closeConnection(program.getDevices()[0]);
                     Console.WriteLine("2 DeviceConnection stoped.");
                 }
                 else
@@ -64,12 +63,13 @@ namespace ConsoleExample
             deviceListener.connected += new ConnectDeviceEventHandler(connected);
             deviceListener.disconnected += new DisconnectDeviceEventHandler(disconnected);
 
-            deviceListener.run();
+            deviceListener.startListening();
         }
 
         public void stop()
         {
-            deviceListener.stop();
+            deviceListener.stopListening();
+            deviceListener.disconnectFromAllDevices();
         }
 
         public List<Device> getDevices()
@@ -79,22 +79,13 @@ namespace ConsoleExample
 
         public void openConnection(Device device)
         {
-            if (deviceConnection == null)
-            {
-                deviceConnection = new DeviceConnection(device);
-            }
-            int port = deviceConnection.connectToPort(22);
+            int port = deviceListener.connectToPort(device, 22);
             Console.WriteLine("Listening port is " + port);
-
-            // You can connect here to additional ports
-            // like this
-            //int additionPort = deviceConnection.connectToPort(80);
-            //Console.WriteLine("Listening additionPort is " + additionPort);
         }
 
-        public void closeConnection()
+        public void closeConnection(Device device)
         {
-            deviceConnection.disconnectFromPort(22);
+            deviceListener.disconnectFromPort(device, 22);
         }
 
         private void connected(object sender, EventArgs e)

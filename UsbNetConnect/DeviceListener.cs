@@ -24,8 +24,68 @@ namespace UsbNetConnect
         private DeviceCalls.am_device_notification subscription;
         private bool isrunning = false;
         private static object syncRoot = new Object();
+        private Dictionary<Device, DeviceConnection> deviceConnections = new Dictionary<Device, DeviceConnection>();
 
-        public void run()
+        public int connectToPort(Device device, short port)
+        {
+            lock (syncRoot)
+            {
+                if (deviceConnections.ContainsKey(device))
+                {
+                    return deviceConnections[device].connectToPort(port);
+                }
+                else
+                {
+                    DeviceConnection dc = new DeviceConnection(device);
+                    int openedPort = dc.connectToPort(port);
+                    if (openedPort > 0)
+                    {
+                        deviceConnections.Add(device, dc);
+                    }
+                    return openedPort;
+                }
+            }
+        }
+
+        public void disconnectFromPort(Device device, short port)
+        {
+            lock (syncRoot)
+            {
+                if (deviceConnections.ContainsKey(device))
+                {
+                    int cntPorts = deviceConnections[device].disconnectFromPort(port);
+                    if (cntPorts == 0)
+                    {
+                        deviceConnections.Remove(device);
+                    }
+                }
+            }
+        }
+
+        public void disconnectFromAllPorts(Device device)
+        {
+            lock (syncRoot)
+            {
+                if (deviceConnections.ContainsKey(device))
+                {
+                    deviceConnections[device].disconnectFromAllPorts();
+                    deviceConnections.Remove(device);
+                }
+            }
+        }
+
+        public void disconnectFromAllDevices()
+        {
+            lock (syncRoot)
+            {
+                foreach (KeyValuePair<Device, DeviceConnection> entry in deviceConnections.ToArray())
+                {
+                    disconnectFromAllPorts(entry.Key);
+                }
+            }
+        }
+
+        public void startListening()
         {
             lock (syncRoot)
             {
@@ -43,7 +103,7 @@ namespace UsbNetConnect
             }
         }
 
-        public void stop()
+        public void stopListening()
         {
             lock (syncRoot)
             {
@@ -115,6 +175,27 @@ namespace UsbNetConnect
             }
         }
 
+        private void disconnectedevent(IntPtr devPtr)
+        {
+            Device device = new Device(devPtr);
+
+            if (deviceConnections.ContainsKey(device))
+            {
+                deviceConnections[device].disconnectFromAllPorts();
+                deviceConnections.Remove(device);
+            }
+
+            if (connectedDevices.Contains(device))
+            {
+                connectedDevices.Remove(device);
+
+                if (disconnected != null)
+                {
+                    disconnected(device, EventArgs.Empty);
+                }
+            }
+        }
+
         private String getDeviceIdentifier(IntPtr devPtr)
         {
             IntPtr devIdPtr = deviceCalls.amDeviceCopyDeviceIdentifier(devPtr);
@@ -147,20 +228,6 @@ namespace UsbNetConnect
         {
             byte[] b = Encoding.ASCII.GetBytes(value);
             return deviceCalls.cfStringCreateWithBytes(IntPtr.Zero, b, b.Length, 0x0600, true);
-        }
-
-        private void disconnectedevent(IntPtr devPtr)
-        {
-            Device device = new Device(devPtr);
-            if (connectedDevices.Contains(device))
-            {
-                connectedDevices.Remove(device);
-
-                if (disconnected != null)
-                {
-                    disconnected(device, EventArgs.Empty);
-                }
-            }
         }
     }
 }

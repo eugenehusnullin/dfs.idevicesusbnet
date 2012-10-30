@@ -10,11 +10,12 @@ using System.Threading.Tasks;
 
 namespace UsbNetConnect
 {
-    public class DeviceConnection
+    class DeviceConnection
     {
         private static object syncRoot = new Object();
 
-        private DeviceCalls deviceCalls;        
+        private DeviceCalls deviceCalls;
+        private Ws2Functions ws2Functions;
         private Device device;        
 
         private Dictionary<short, PortConnection> portConnections;
@@ -23,6 +24,7 @@ namespace UsbNetConnect
         {
             this.device = device;
             deviceCalls = DeviceCalls.getInstance();
+            ws2Functions = Ws2Functions.getInstance();
 
             portConnections = new Dictionary<short, PortConnection>();            
         }
@@ -42,16 +44,23 @@ namespace UsbNetConnect
                         deviceConnect();
                     }
 
-                    PortConnection portCon = new PortConnection(port, device);
-                    int listenPort = portCon.start();
-                    portConnections.Add(port, portCon);
+                    if (PortConnection.checkPort(ws2Functions, deviceCalls, device, port))
+                    {
+                        PortConnection portCon = new PortConnection(port, device);
+                        int listenPort = portCon.start();
+                        portConnections.Add(port, portCon);
 
-                    return listenPort;
+                        return listenPort;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
                 }
             }
         }
 
-        public void disconnectFromPort(short port)
+        public int disconnectFromPort(short port)
         {
             lock (syncRoot)
             {
@@ -64,6 +73,8 @@ namespace UsbNetConnect
                         deviceDisconnect();
                     }
                 }
+
+                return portConnections.Count;
             }
         }
 
@@ -71,7 +82,7 @@ namespace UsbNetConnect
         {
             lock (syncRoot)
             {
-                foreach (KeyValuePair<short, PortConnection> entry in portConnections)
+                foreach (KeyValuePair<short, PortConnection> entry in portConnections.ToArray())
                 {
                     disconnectFromPort(entry.Key);
                 }
@@ -90,6 +101,17 @@ namespace UsbNetConnect
         private void deviceDisconnect()
         {
             deviceCalls.amDeviceDisconnect(device.getDevPtr());
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return base.Equals(obj);
+            }
+
+            DeviceConnection dc = (DeviceConnection)obj;
+            return device.Equals(dc.device);
         }
     }
 }

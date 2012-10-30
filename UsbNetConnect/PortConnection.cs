@@ -24,6 +24,8 @@ namespace UsbNetConnect
         private short port;
 
         private List<Socket> activeSockets;
+        
+        AutoResetEvent autoResetEventSocket;
 
         public PortConnection(short port, Device device)
         {
@@ -50,6 +52,9 @@ namespace UsbNetConnect
             isStarted = false;
             listener.Stop();
 
+
+            autoResetEventSocket = new AutoResetEvent(false);
+
             foreach (Socket socket in activeSockets)
             {
                 if (socket.IsBound)
@@ -57,10 +62,18 @@ namespace UsbNetConnect
                     socket.Close();
                 }
             }
+
+            activeSockets.Clear();
+
+            autoResetEventSocket.WaitOne();
         }
 
         public int getPort()
         {
+            if (!isStarted)
+            {
+                return -1;
+            }
             return ((IPEndPoint)listener.LocalEndpoint).Port;
         }
 
@@ -83,42 +96,53 @@ namespace UsbNetConnect
             }
             catch (SocketException)
             {
-                // A blocking operation was interrupted by a call to WSACancelBlockingCall
+                // A blocking operation was interrupted by a call to WSACancelBlockingCall                
             }
+            autoResetEventSocket.Set();
         }
 
         private void startConnection(Socket socket)
         {
-            activeSockets.Add(socket);
+            int outHandle = -1;
+            int errorCode = initHandle(deviceCalls, device, port, ref outHandle);
+            if (errorCode == 0)
+            {
+                activeSockets.Add(socket);
 
-            Stream stream = new NetworkStream(socket);
-            int outHandle = initHandle(port);
-            CountdownEvent countdownEvent = new CountdownEvent(2);
+                Stream stream = new NetworkStream(socket);
 
-            Thread threadToDevice = new Thread(() => toDevice(outHandle, stream, countdownEvent));
-            Thread threadFromDevice = new Thread(() => fromDevice(outHandle, stream, countdownEvent));
-            
-            threadToDevice.Start();
-            threadFromDevice.Start();
-            countdownEvent.Wait();
+                CountdownEvent countdownEvent = new CountdownEvent(2);
 
-            activeSockets.Remove(socket);
+                Thread threadToDevice = new Thread(() => toDevice(outHandle, stream, countdownEvent));
+                Thread threadFromDevice = new Thread(() => fromDevice(outHandle, stream, countdownEvent, socket));
+
+                threadToDevice.Start();
+                threadFromDevice.Start();
+
+                countdownEvent.Wait();
+
+                activeSockets.Remove(socket);
+            }
             socket.Close();
         }
 
-        private int initHandle(short port)
+        private static int initHandle(DeviceCalls deviceCalls, Device device, short port, ref int outHandle)
         {
             short networkByteOrderPort = IPAddress.HostToNetworkOrder(port);
             int connectionID = deviceCalls.amDeviceGetConnectionID(device.getDevPtr());
+            return deviceCalls.usbMuxConnectByPort(connectionID, networkByteOrderPort, ref outHandle);
+        }
+
+        public static bool checkPort(Ws2Functions ws2Functions, DeviceCalls deviceCalls, Device device, short port)
+        {
             int outHandle = -1;
-
-            int errorCode = deviceCalls.usbMuxConnectByPort(connectionID, networkByteOrderPort, ref outHandle);
-            if (errorCode != 0)
+            int errorCode = initHandle(deviceCalls, device, port, ref outHandle);
+            if (errorCode == 0)
             {
-                throw new UsbMuxConnectByPortException(errorCode);
+                ws2Functions.closeSocket(outHandle);
+                return true;
             }
-
-            return outHandle;
+            return false;
         }
 
         private void toDevice(int outHandle, Stream stream, CountdownEvent countdownEvent)
@@ -141,12 +165,15 @@ namespace UsbNetConnect
                 }
             }
 
-            ws2Functions.closeSocket(outHandle);
+            if (countdownEvent.CurrentCount == 2)
+            {
+                ws2Functions.closeSocket(outHandle);
+            }
 
             countdownEvent.Signal();
         }
 
-        private void fromDevice(int outHandle, Stream stream, CountdownEvent countdownEvent)
+        private void fromDevice(int outHandle, Stream stream, CountdownEvent countdownEvent, Socket socket)
         {
             byte[] buffer = new byte[BUFFER_SIZE];
             while (true)
@@ -169,6 +196,11 @@ namespace UsbNetConnect
                 }
             }
 
+            if (countdownEvent.CurrentCount == 2)
+            {
+                socket.Close();
+            }
+            
             countdownEvent.Signal();
         }
     }
