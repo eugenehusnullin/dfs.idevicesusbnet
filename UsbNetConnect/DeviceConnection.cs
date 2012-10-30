@@ -54,6 +54,10 @@ namespace UsbNetConnect
                     }
                     else
                     {
+                        if (portConnections.Count == 0)
+                        {
+                            deviceDisconnect();
+                        }
                         return -1;
                     }
                 }
