@@ -25,7 +25,8 @@ namespace UsbNetConnect
 
         private List<Socket> activeSockets;
         
-        AutoResetEvent autoResetEventSocket;
+        private AutoResetEvent autoResetEventSocket;
+        private CountdownEvent countdownEventActiveSockets = null;
 
         public PortConnection(short port, Device device)
         {
@@ -36,11 +37,13 @@ namespace UsbNetConnect
             ws2Functions = Ws2Functions.getInstance();
 
             activeSockets = new List<Socket>();
+            autoResetEventSocket = new AutoResetEvent(false);
         }
 
         public int start()
         {
             isStarted = true;
+            autoResetEventSocket.Reset();
             startTcpListener();
             new Thread(new ThreadStart(startAcceptSocket)).Start();
 
@@ -49,11 +52,10 @@ namespace UsbNetConnect
 
         public void stop()
         {
+            countdownEventActiveSockets = new CountdownEvent(activeSockets.Count);
+
             isStarted = false;
             listener.Stop();
-
-
-            autoResetEventSocket = new AutoResetEvent(false);
 
             foreach (Socket socket in activeSockets)
             {
@@ -66,6 +68,7 @@ namespace UsbNetConnect
             activeSockets.Clear();
 
             autoResetEventSocket.WaitOne();
+            countdownEventActiveSockets.Wait();
         }
 
         public int getPort()
@@ -124,6 +127,10 @@ namespace UsbNetConnect
                 activeSockets.Remove(socket);
             }
             socket.Close();
+            if (countdownEventActiveSockets != null)
+            {
+                countdownEventActiveSockets.Signal();
+            }
         }
 
         private static int initHandle(DeviceCalls deviceCalls, Device device, short port, ref int outHandle)
@@ -165,12 +172,14 @@ namespace UsbNetConnect
                 }
             }
 
-            if (countdownEvent.CurrentCount == 2)
+            lock (countdownEvent)
             {
-                ws2Functions.closeSocket(outHandle);
+                if (countdownEvent.CurrentCount == 2)
+                {
+                    ws2Functions.closeSocket(outHandle);
+                }
+                countdownEvent.Signal();
             }
-
-            countdownEvent.Signal();
         }
 
         private void fromDevice(int outHandle, Stream stream, CountdownEvent countdownEvent, Socket socket)
@@ -196,12 +205,15 @@ namespace UsbNetConnect
                 }
             }
 
-            if (countdownEvent.CurrentCount == 2)
+            lock (countdownEvent)
             {
-                socket.Close();
+                if (countdownEvent.CurrentCount == 2)
+                {
+                    socket.Close();
+                }
+
+                countdownEvent.Signal();
             }
-            
-            countdownEvent.Signal();
         }
     }
 }
