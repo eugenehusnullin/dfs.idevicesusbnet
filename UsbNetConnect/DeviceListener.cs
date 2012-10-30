@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UsbNetConnect
@@ -25,6 +26,8 @@ namespace UsbNetConnect
         private bool isrunning = false;
         private static object syncRoot = new Object();
         private Dictionary<Device, DeviceConnection> deviceConnections = new Dictionary<Device, DeviceConnection>();
+
+        private AutoResetEvent syncUnsubscribe = new AutoResetEvent(false);
 
         public int connectToPort(Device device, short port)
         {
@@ -121,6 +124,8 @@ namespace UsbNetConnect
 
         private void subscribe()
         {
+            syncUnsubscribe.Reset();
+
             DeviceCalls.am_device_notification_callback callback = new DeviceCalls.am_device_notification_callback(subscribeCallback);
             uint unused0 = 0;
             uint unused1 = 0;
@@ -133,6 +138,8 @@ namespace UsbNetConnect
         private void unsubscribe()
         {
             deviceCalls.amDeviceNotificationUnsubscribe(subscription);
+
+            syncUnsubscribe.WaitOne(1000);
         }
 
         private void subscribeCallback(ref DeviceCalls.am_device_notification_callback_info callbackInfo, uint cookie)
@@ -156,6 +163,10 @@ namespace UsbNetConnect
                     default:
                         break;
                 }
+            }
+            else if (interfaceType == -1)
+            {
+                syncUnsubscribe.Set();
             }
         }
 
