@@ -129,7 +129,7 @@ namespace UsbNetConnect
         public CFStringCreateWithBytes cfStringCreateWithBytes;
         public __CFStringMakeConstantString __cfStringMakeConstantString;
 
-        private static DeviceCalls instance = null;
+        private static volatile DeviceCalls instance = null;
         private static object syncRoot = new Object();
 
         public static DeviceCalls getInstance()

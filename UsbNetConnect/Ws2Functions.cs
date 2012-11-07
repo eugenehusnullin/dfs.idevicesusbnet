@@ -32,7 +32,7 @@ namespace UsbNetConnect
 
         private IntPtr dllPtr = IntPtr.Zero;
 
-        private static Ws2Functions instance = null;
+        private static volatile Ws2Functions instance = null;
         private static object syncRoot = new Object();
 
         public static Ws2Functions getInstance()
