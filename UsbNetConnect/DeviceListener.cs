@@ -27,7 +27,14 @@ namespace UsbNetConnect
         private static object syncRoot = new Object();
         private Dictionary<Device, DeviceConnection> deviceConnections = new Dictionary<Device, DeviceConnection>();
 
+        private DeviceCalls.am_device_notification_callback callback;
+
         private AutoResetEvent syncUnsubscribe = new AutoResetEvent(false);
+
+        public DeviceListener()
+        {
+            callback = new DeviceCalls.am_device_notification_callback(subscribeCallback);
+        }
 
         public int connectToPort(Device device, short port)
         {
@@ -125,8 +132,7 @@ namespace UsbNetConnect
         private void subscribe()
         {
             syncUnsubscribe.Reset();
-
-            DeviceCalls.am_device_notification_callback callback = new DeviceCalls.am_device_notification_callback(subscribeCallback);
+            
             uint unused0 = 0;
             uint unused1 = 0;
             uint cookie = 0;
