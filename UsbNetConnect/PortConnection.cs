@@ -65,10 +65,10 @@ namespace UsbNetConnect
                 }
             }
 
-            activeSockets.Clear();
-
             autoResetEventSocket.WaitOne();
             countdownEventActiveSockets.Wait();
+
+            activeSockets.Clear();
         }
 
         public int getPort()
@@ -129,7 +129,7 @@ namespace UsbNetConnect
             socket.Close();
             if (countdownEventActiveSockets != null)
             {
-                countdownEventActiveSockets.Signal();
+                countdownEventActiveSockets.Signal();                
             }
         }
 
