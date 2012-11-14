@@ -57,7 +57,7 @@ namespace UsbNetConnect
             isStarted = false;
             listener.Stop();
 
-            foreach (Socket socket in activeSockets)
+            foreach (Socket socket in activeSockets.ToArray())
             {
                 if (socket.IsBound)
                 {
