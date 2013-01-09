@@ -16,7 +16,7 @@ namespace UsbNetConnect
 
         private DeviceCalls deviceCalls;
         private Ws2Functions ws2Functions;
-        private Device device;        
+        private Device device;
 
         private Dictionary<short, PortConnection> portConnections;
 
@@ -28,7 +28,7 @@ namespace UsbNetConnect
 
             portConnections = new Dictionary<short, PortConnection>();            
         }
-
+        
         public int connectToPort(short port)
         {
             lock (syncRoot)

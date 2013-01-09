@@ -10,10 +10,43 @@ namespace UsbNetConnect
     {
         private IntPtr devPtr = IntPtr.Zero;
         private String deviceIdentifier;
+        private String deviceClass;
+        private String deviceName;
+        private String productVersion;
 
         public Device(IntPtr devPtr)
         {
             this.devPtr = devPtr;
+        }
+
+        public void setDeviceClass(String deviceClass)
+        {
+            this.deviceClass = deviceClass;
+        }
+
+        public String getDeviceClass()
+        {
+            return deviceClass;
+        }
+
+        public void setDeviceName(String deviceName)
+        {
+            this.deviceName = deviceName;
+        }
+
+        public String getDeviceName()
+        {
+            return deviceName;
+        }
+
+        public void setProductVersion(String productVersion)
+        {
+            this.productVersion = productVersion;
+        }
+
+        public String getProductVersion()
+        {
+            return productVersion;
         }
 
         public void setDevPtr(IntPtr devPtr)
@@ -45,6 +78,11 @@ namespace UsbNetConnect
 
             Device d = (Device)obj;
             return devPtr.Equals(d.devPtr);
+        }
+
+        public override string ToString()
+        {
+            return deviceName;
         }
 
     }

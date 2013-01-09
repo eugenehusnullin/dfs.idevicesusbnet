@@ -180,6 +180,9 @@ namespace UsbNetConnect
         {
             Device device = new Device(devPtr);
             device.setDeviceIdentifier(getDeviceIdentifier(devPtr));
+            device.setDeviceClass(getDeviceValue(devPtr, "DeviceClass"));
+            device.setDeviceName(getDeviceValue(devPtr, "DeviceName"));
+            device.setProductVersion(getDeviceValue(devPtr, "ProductVersion"));
 
             if (!connectedDevices.Contains(device))
             {
@@ -219,10 +222,10 @@ namespace UsbNetConnect
             return CFString2String(devIdPtr);
         }
 
-        private String getDeviceName(IntPtr devPtr)
+        public String getDeviceValue(IntPtr devPtr, String valueName)
         {
             deviceCalls.amDeviceConnect(devPtr);
-            IntPtr domain = String2CFString("DeviceName");
+            IntPtr domain = String2CFString(valueName);
             IntPtr result = deviceCalls.amDeviceCopyValue(devPtr, IntPtr.Zero, domain);
             deviceCalls.amDeviceDisconnect(devPtr);
 

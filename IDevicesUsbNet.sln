@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleExample", "ConsoleEx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsbNetConnect", "UsbNetConnect\UsbNetConnect.csproj", "{2B00308B-13A1-4126-A2CD-5F6762E6F44C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashGui", "FlashGui\FlashGui.csproj", "{4A4758E5-ED78-4599-98C3-45793E994865}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,12 @@ Global
 		{2B00308B-13A1-4126-A2CD-5F6762E6F44C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B00308B-13A1-4126-A2CD-5F6762E6F44C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2B00308B-13A1-4126-A2CD-5F6762E6F44C}.Release|x86.ActiveCfg = Release|Any CPU
+		{4A4758E5-ED78-4599-98C3-45793E994865}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A4758E5-ED78-4599-98C3-45793E994865}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A4758E5-ED78-4599-98C3-45793E994865}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4A4758E5-ED78-4599-98C3-45793E994865}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A4758E5-ED78-4599-98C3-45793E994865}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A4758E5-ED78-4599-98C3-45793E994865}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

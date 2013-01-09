@@ -46,6 +46,11 @@ namespace ConsoleExample
                     program.closeConnection(program.getDevices()[0]);
                     Console.WriteLine("2 DeviceConnection stoped.");
                 }
+                else if (s.Equals("info"))
+                {
+                    program.getDeviceInfo(program.getDevices()[0]);
+                    Console.WriteLine("info: getDeviceInfo");
+                }
                 else
                 {
                     Console.WriteLine("***");
@@ -94,6 +99,10 @@ namespace ConsoleExample
             connectedDevices.Add(device);
 
             Console.WriteLine("Connected device!");
+            Console.WriteLine("Device name is: " + device.getDeviceName());
+            Console.WriteLine("Device class is: " + device.getDeviceClass());
+            Console.WriteLine("Product version is: " + device.getProductVersion());
+            Console.WriteLine("Device identifier is: " + device.getDeviceIdentifier());
         }
 
         private void disconnected(object sender, EventArgs e)
@@ -102,6 +111,75 @@ namespace ConsoleExample
             connectedDevices.Remove(device);
 
             Console.WriteLine("Disconnected device!");
+        }
+
+        private void getDeviceInfo(Device device)
+        {
+            String[] values = new String[] {
+                "ActivationPublicKey",
+                "ActivationState",
+                "ActivationStateAcknowledged",
+                "ActivityURL",
+                "BasebandBootloaderVersion",
+                "BasebandSerialNumber",
+                "BasebandStatus",
+                "BasebandVersion",
+                "BluetoothAddress",
+                "BuildVersion",
+                "CPUArchitecture",
+                "DeviceCertificate",
+                "DeviceClass",
+                "DeviceColor",
+                "DeviceName",
+                "DevicePublicKey",
+                "DieID",
+                "FirmwareVersion",
+                "HardwareModel",
+                "HardwarePlatform",
+                "HostAttached",
+                "IMLockdownEverRegisteredKey",
+                "IntegratedCircuitCardIdentity",
+                "InternationalMobileEquipmentIdentity",
+                "InternationalMobileSubscriberIdentity",
+                "iTunesHasConnected",
+                "MLBSerialNumber",
+                "MobileSubscriberCountryCode",
+                "MobileSubscriberNetworkCode",
+                "ModelNumber",
+                "PartitionType",
+                "PasswordProtected",
+                "PhoneNumber",
+                "ProductionSOC",
+                "ProductType",
+                "ProductVersion",
+                "ProtocolVersion",
+                "ProximitySensorCalibration",
+                "RegionInfo",
+                "SBLockdownEverRegisteredKey",
+                "SerialNumber",
+                "SIMStatus",
+                "SoftwareBehavior",
+                "SoftwareBundleVersion",
+                "SupportedDeviceFamilies",
+                "TelephonyCapability",
+                "TimeIntervalSince1970",
+                "TimeZone",
+                "TimeZoneOffsetFromUTC",
+                "TrustedHostAttached",
+                "UniqueChipID",
+                "UniqueDeviceID",
+                "UseActivityURL",
+                "UseRaptorCerts",
+                "Uses24HourClock",
+                "WeDelivered",
+                "WiFiAddress"
+            };
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                String value = deviceListener.getDeviceValue(device.getDevPtr(), values[i]);
+                Console.WriteLine(values[i] + ": " + value);
+            }
         }
     }
 }

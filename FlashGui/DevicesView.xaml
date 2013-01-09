@@ -1,0 +1,8 @@
+﻿<Window x:Class="FlashGui.DevicesView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="389">
+    <Grid>
+        <StackPanel x:Name="spDevices" HorizontalAlignment="Stretch" Height="310" VerticalAlignment="Top" Margin="10,5"/>
+    </Grid>
+</Window>
